@@ -1,0 +1,33 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  category    String
+  description String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  userId      String   // <--- Link to Clerk User ID
+}
+
+model Budget {
+  id     Int   @id @default(autoincrement())
+  amount Float @default(0)
+  userId String   // <--- Link to Clerk User ID
+}
+
+model Category {
+  id     Int    @id @default(autoincrement())
+  name   String
+  icon   String // Store emoji like "🍔"
+  userId String // Link to user
+}
