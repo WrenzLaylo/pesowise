@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { addTransaction, deleteExpense, addSubscription, deleteSubscription, addCategory, deleteCategory, generateDemoData } from './actions';
-import { Trash2 } from 'lucide-react';
+import { Trash2, TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react'; // Added icons
 import ExpenseChart from '@/components/ExpenseChart';
 import HistoryChart from '@/components/HistoryChart';
 import SettingsModal from '@/components/SettingsModal';
@@ -31,6 +31,10 @@ export default async function Home() {
   const totalIncome = incomeItems.reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = expenseItems.reduce((sum, t) => sum + t.amount, 0);
   const totalBalance = totalIncome - totalExpenses;
+
+  // Budget Calculations
+  const spentPercentage = totalIncome > 0 ? Math.min((totalExpenses / totalIncome) * 100, 100) : 0;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
 
   // Chart Data
   const chartDataMap = new Map<string, number>();
@@ -86,7 +90,6 @@ export default async function Home() {
                  </div>
               </div>
               
-              {/* FIXED: Restored SettingsModal here */}
               <SettingsModal 
                  categories={categories} 
                  addCategoryAction={addCategory} 
@@ -98,8 +101,8 @@ export default async function Home() {
             {/* TOP ROW: BALANCE & SUBSCRIPTIONS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                
-               {/* BALANCE CARD */}
-               <div className="lg:col-span-2 bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-900/10 relative overflow-hidden flex flex-col justify-center min-h-[280px] border border-transparent">
+               {/* BALANCE CARD (Takes 2 columns) */}
+               <div className="lg:col-span-2 bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-900/10 relative overflow-hidden flex flex-col justify-center min-h-[300px] border border-transparent">
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 w-full">
                       <div className="space-y-2">
                           <p className="text-gray-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
@@ -107,19 +110,20 @@ export default async function Home() {
                             Total Net Balance
                           </p>
                           <h2 className="text-5xl md:text-7xl font-black tracking-tight">₱{totalBalance.toLocaleString()}</h2>
-                          <p className="text-sm text-gray-500 font-medium pt-2">
+                          <p className="text-sm text-gray-500 font-medium pt-2 flex items-center gap-2">
+                            {totalBalance > 0 ? <TrendingUp className="w-4 h-4 text-emerald-500"/> : <TrendingDown className="w-4 h-4 text-red-500"/>}
                             {totalBalance > 0 ? "You are saving money! 🎉" : "Time to tighten the budget. 😬"}
                           </p>
                       </div>
 
-                      <div className="flex items-center gap-8 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-                          <div className="text-right">
-                              <div className="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center justify-end gap-1">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+                          <div className="text-left sm:text-right">
+                              <div className="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center sm:justify-end gap-1">
                                 Income <div className="w-2 h-2 rounded-full bg-emerald-400" />
                               </div>
                               <div className="text-2xl font-bold">₱{totalIncome.toLocaleString()}</div>
                           </div>
-                          <div className="w-px h-12 bg-gray-700/50"></div>
+                          <div className="hidden sm:block w-px h-12 bg-gray-700/50"></div>
                           <div className="text-left">
                               <div className="text-xs text-red-400 font-bold uppercase mb-1 flex items-center gap-1">
                                 <div className="w-2 h-2 rounded-full bg-red-400" /> Expenses
@@ -131,8 +135,8 @@ export default async function Home() {
                   <div className="absolute -right-10 -bottom-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
                </div>
 
-               {/* SUBSCRIPTIONS */}
-               <div className="lg:col-span-1 h-full">
+               {/* SUBSCRIPTIONS (Takes 1 column) */}
+               <div className="lg:col-span-1 h-full flex flex-col">
                   <SubscriptionCard 
                     subscriptions={subscriptions} 
                     addSubAction={addSubscription} 
@@ -143,23 +147,66 @@ export default async function Home() {
 
             {/* MIDDLE ROW: CHARTS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               <div className="lg:col-span-2">
+               <div className="lg:col-span-2 h-full">
                   <HistoryChart data={barData} />
                </div>
-               <div className="lg:col-span-1">
+               <div className="lg:col-span-1 h-full">
                   <ExpenseChart data={pieData} />
                </div>
             </div>
 
-            {/* BOTTOM ROW: ACTIONS & LIST */}
+            {/* BOTTOM ROW: ACTIONS & LIST (Modified for better fill) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
-                <div className="lg:col-span-1 sticky top-6">
+                {/* LEFT COLUMN: Sticky Tools */}
+                <div className="lg:col-span-1 sticky top-6 space-y-6">
+                    {/* 1. Transaction Form */}
                     <TransactionForm categories={categories} addAction={addTransaction} />
+
+                    {/* 2. NEW: Budget Overview Widget */}
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                <Wallet className="w-5 h-5 text-purple-500" />
+                                Monthly Budget
+                            </h3>
+                            <span className="text-xs font-bold bg-purple-50 text-purple-600 px-2 py-1 rounded-full">
+                                {Math.round(spentPercentage)}% Used
+                            </span>
+                        </div>
+                        
+                        <div className="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden">
+                            <div 
+                                className={`h-full rounded-full transition-all duration-500 ${spentPercentage > 90 ? 'bg-red-500' : 'bg-purple-500'}`} 
+                                style={{ width: `${spentPercentage}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 text-center">
+                            You have spent <b>₱{totalExpenses.toLocaleString()}</b> of your <b>₱{totalIncome.toLocaleString()}</b> income.
+                        </p>
+                    </div>
+
+                    {/* 3. NEW: Financial Health Widget */}
+                    <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-6 rounded-[2rem] shadow-lg text-white relative overflow-hidden">
+                         <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-2 opacity-90">
+                                <Target className="w-5 h-5" />
+                                <span className="text-sm font-bold uppercase tracking-wider">Savings Rate</span>
+                            </div>
+                            <div className="text-4xl font-black mb-1">
+                                {Math.round(savingsRate)}%
+                            </div>
+                            <p className="text-sm opacity-90 font-medium">
+                                {savingsRate > 20 ? "Excellent work! 🚀" : savingsRate > 0 ? "Good start, keep going!" : "Let's try to save more."}
+                            </p>
+                         </div>
+                         <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    </div>
+
                 </div>
 
-                {/* ACTIVITY LIST */}
-                <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[400px]">
+                {/* RIGHT COLUMN: Activity List */}
+                <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[500px] flex flex-col">
                     <div className="flex items-center justify-between mb-6 px-2">
                       <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-3 py-1 rounded-full">
@@ -167,9 +214,13 @@ export default async function Home() {
                       </span>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-3 flex-1">
                         {transactions.length === 0 && (
-                          <div className="text-center py-10 text-gray-400">No transactions yet.</div>
+                          <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">💤</div>
+                              <p className="text-gray-400 font-medium">No transactions yet.</p>
+                              <p className="text-gray-300 text-sm">Add one on the left to get started.</p>
+                          </div>
                         )}
                         {transactions.map((t) => (
                             <div key={t.id} className="group bg-gray-50/50 hover:bg-white rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-gray-100 hover:shadow-md transition-all duration-200">
@@ -197,6 +248,12 @@ export default async function Home() {
                             </div>
                         ))}
                     </div>
+                    {/* Footer text to fill bottom space nicely */}
+                    {transactions.length > 5 && (
+                        <div className="pt-6 text-center border-t border-gray-50 mt-4">
+                            <p className="text-xs text-gray-400">Showing recent transactions</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
