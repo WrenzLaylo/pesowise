@@ -9,6 +9,9 @@ import TransactionForm from '@/components/TransactionForm';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
+// 👇 ADD THIS LINE HERE
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 export default async function Home() {
