@@ -2,33 +2,58 @@
 
 import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@clerk/nextjs/server'; // <--- Import Clerk Auth
+import { auth } from '@clerk/nextjs/server';
 
 const prisma = new PrismaClient();
 
-export async function addExpense(formData: FormData) {
-    const { userId } = await auth(); // Get logged-in user
-    if (!userId) throw new Error('You must be logged in');
+// 1. UPDATED: Add Transaction (Handles both Income and Expense)
+export async function addTransaction(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
 
-    const amount = parseFloat(formData.get('amount') as string);
-    const description = formData.get('description') as string;
-    const category = formData.get('category') as string;
+  const amount = parseFloat(formData.get('amount') as string);
+  const description = formData.get('description') as string;
+  const category = formData.get('category') as string;
+  const type = formData.get('type') as string; // "INCOME" or "EXPENSE"
 
-    // 🛑 SECURITY FIX: Prevent negative numbers
-    if (amount <= 0) {
-        throw new Error("Amount must be positive");
-    }
+  if (amount <= 0) throw new Error("Amount must be positive");
 
-    await prisma.expense.create({
-        data: {
-            amount,
-            description,
-            category,
-            userId, // <--- Save the User ID
-        },
-    });
+  await prisma.expense.create({
+    data: {
+      amount,
+      description,
+      category,
+      type, 
+      userId,
+    },
+  });
 
-    revalidatePath('/');
+  revalidatePath('/');
+}
+
+// 2. NEW: Add Subscription
+export async function addSubscription(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
+
+  const name = formData.get('name') as string;
+  const amount = parseFloat(formData.get('amount') as string);
+  const dueDay = parseInt(formData.get('dueDay') as string);
+
+  await prisma.subscription.create({
+    data: { name, amount, dueDay, userId },
+  });
+
+  revalidatePath('/');
+}
+
+// 3. NEW: Delete Subscription
+export async function deleteSubscription(id: number) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
+
+  await prisma.subscription.deleteMany({ where: { id, userId } });
+  revalidatePath('/');
 }
 
 export async function deleteExpense(id: number) {
