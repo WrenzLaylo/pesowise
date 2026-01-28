@@ -1,17 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Database } from 'lucide-react'; // Added Database icon
 
-// ✅ UPDATE THIS INTERFACE
 type SettingsProps = {
   categories: { id: number; name: string; icon: string }[];
   addCategoryAction: (formData: FormData) => void;
   deleteCategoryAction: (id: number) => void;
-  generateDemoDataAction: () => Promise<void>; // <--- Added this line
+  generateDemoDataAction: () => Promise<void>; 
 };
 
-// ✅ ADD IT TO THE PROPS HERE
 export default function SettingsModal({ 
   categories, 
   addCategoryAction, 
@@ -21,7 +19,15 @@ export default function SettingsModal({
   
   const [isOpen, setIsOpen] = useState(false);
 
-  // ... rest of your component code ...
+  // Loading state for the demo button
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerateClick = async () => {
+    setIsLoading(true);
+    await generateDemoDataAction();
+    setIsOpen(false); // Close modal after generating
+    setIsLoading(false);
+  };
 
   if (!isOpen) {
     return (
@@ -92,13 +98,25 @@ export default function SettingsModal({
             </form>
           </div>
 
-          <hr />
+          <hr className="border-gray-100" />
 
-          {/* Section: Account Info */}
+          {/* Section: Demo Data (I ADDED THIS FOR YOU) */}
           <div>
-             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Account</h3>
-             <p className="text-sm text-gray-600">
-               Manage your subscription and profile details directly via your provider.
+             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Developer Tools</h3>
+             <button 
+                onClick={handleGenerateClick}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 font-bold py-3 px-4 rounded-xl hover:bg-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+             >
+                {isLoading ? (
+                  <span className="animate-spin">⏳</span>
+                ) : (
+                  <Database className="w-4 h-4" />
+                )}
+                {isLoading ? "Generating..." : "Generate Demo Data"}
+             </button>
+             <p className="text-xs text-center text-gray-400 mt-2">
+                ⚠️ This will clear your current data.
              </p>
           </div>
 

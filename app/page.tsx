@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { addTransaction, deleteExpense, setBudget, addSubscription, deleteSubscription, addCategory, deleteCategory, generateDemoData } from './actions';
+import { addTransaction, deleteExpense, addSubscription, deleteSubscription, addCategory, deleteCategory, generateDemoData } from './actions';
 import { Trash2 } from 'lucide-react';
 import ExpenseChart from '@/components/ExpenseChart';
 import HistoryChart from '@/components/HistoryChart';
@@ -18,14 +18,11 @@ export default async function Home() {
   let transactions: any[] = [];
   let subscriptions: any[] = [];
   let categories: any[] = [];
-  let budgetLimit = 0;
-
+  
   if (userId) {
     transactions = await prisma.expense.findMany({ where: { userId }, orderBy: { date: 'desc' } });
     subscriptions = await prisma.subscription.findMany({ where: { userId } });
     categories = await prisma.category.findMany({ where: { userId } });
-    const budgetData = await prisma.budget.findFirst({ where: { userId } });
-    budgetLimit = budgetData?.amount || 0;
   }
 
   // --- Calculations ---
@@ -57,16 +54,15 @@ export default async function Home() {
   const barData = Array.from(historyMap, ([date, amount]) => ({ date, amount }));
 
   return (
-    // DARK MODE: Main background changes to slate-950
-    <main className="min-h-screen bg-[#F2F2F7] dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <main className="min-h-screen bg-[#F2F2F7] font-sans text-slate-900">
       
       <SignedOut>
          <div className="flex min-h-screen items-center justify-center p-6">
-            <div className="text-center space-y-6 p-10 bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full border border-gray-100 dark:border-slate-800">
-                <h1 className="text-4xl font-black tracking-tight dark:text-white">PesoWise</h1>
-                <p className="text-gray-500 dark:text-gray-400">Sign in to manage your budget.</p>
+            <div className="text-center space-y-6 p-10 bg-white rounded-[3rem] shadow-2xl max-w-md w-full border border-gray-100">
+                <h1 className="text-4xl font-black tracking-tight">PesoWise</h1>
+                <p className="text-gray-500">Sign in to manage your budget.</p>
                 <SignInButton mode="modal">
-                   <button className="bg-slate-900 dark:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-transform">
+                   <button className="bg-slate-900 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-transform">
                       Sign In
                    </button>
                 </SignInButton>
@@ -81,21 +77,29 @@ export default async function Home() {
             {/* HEADER */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
               <div className="flex items-center gap-4">
-                 <div className="scale-110 border-2 border-white dark:border-slate-700 rounded-full"><UserButton afterSignOutUrl="/" /></div>
+                 <div className="scale-110"><UserButton afterSignOutUrl="/" /></div>
                  <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">
+                    <h1 className="text-2xl font-bold tracking-tight text-black">
                       Hi, {user?.firstName || 'Friend'}!
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Welcome to your financial command center.</p>
+                    <p className="text-gray-500 text-sm font-medium">Welcome to your financial command center.</p>
                  </div>
               </div>
+              
+              {/* FIXED: Restored SettingsModal here */}
+              <SettingsModal 
+                 categories={categories} 
+                 addCategoryAction={addCategory} 
+                 deleteCategoryAction={deleteCategory} 
+                 generateDemoDataAction={generateDemoData}
+              />
             </div>
 
             {/* TOP ROW: BALANCE & SUBSCRIPTIONS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                
-               {/* BALANCE CARD (Dark mode: Keep dark, but adjust borders/shadows) */}
-               <div className="lg:col-span-2 bg-slate-900 dark:bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-900/10 dark:shadow-black/50 relative overflow-hidden flex flex-col justify-center min-h-[280px] border border-transparent dark:border-slate-800">
+               {/* BALANCE CARD */}
+               <div className="lg:col-span-2 bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-900/10 relative overflow-hidden flex flex-col justify-center min-h-[280px] border border-transparent">
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 w-full">
                       <div className="space-y-2">
                           <p className="text-gray-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
@@ -154,11 +158,11 @@ export default async function Home() {
                     <TransactionForm categories={categories} addAction={addTransaction} />
                 </div>
 
-                {/* ACTIVITY LIST (Dark mode updated) */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-slate-800 min-h-[400px]">
+                {/* ACTIVITY LIST */}
+                <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[400px]">
                     <div className="flex items-center justify-between mb-6 px-2">
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Recent Activity</h3>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800 px-3 py-1 rounded-full">
+                      <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-3 py-1 rounded-full">
                         {transactions.length} Transactions
                       </span>
                     </div>
@@ -168,24 +172,24 @@ export default async function Home() {
                           <div className="text-center py-10 text-gray-400">No transactions yet.</div>
                         )}
                         {transactions.map((t) => (
-                            <div key={t.id} className="group bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-gray-100 dark:hover:border-slate-700 hover:shadow-md transition-all duration-200">
+                            <div key={t.id} className="group bg-gray-50/50 hover:bg-white rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-gray-100 hover:shadow-md transition-all duration-200">
                                 <div className="flex items-center gap-4">
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${t.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-gray-100 dark:border-slate-600'}`}>
+                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${t.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-700 border border-gray-100'}`}>
                                         {t.type === 'INCOME' ? '💰' : t.category === 'Food' ? '🍔' : t.category === 'Transport' ? '🚕' : '💸'}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-slate-900 dark:text-white text-base">{t.description}</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
-                                           {new Date(t.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} • {t.type === 'INCOME' ? <span className="text-emerald-600 dark:text-emerald-400 font-bold">Income</span> : t.category}
+                                        <div className="font-bold text-slate-900 text-base">{t.description}</div>
+                                        <div className="text-xs text-gray-500 font-medium mt-0.5">
+                                           {new Date(t.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} • {t.type === 'INCOME' ? <span className="text-emerald-600 font-bold">Income</span> : t.category}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-5">
-                                    <span className={`font-bold text-lg ${t.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                                    <span className={`font-bold text-lg ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-900'}`}>
                                        {t.type === 'INCOME' ? '+' : '-'}₱{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                     <form action={deleteExpense.bind(null, t.id)}>
-                                        <button className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-xl transition-all">
+                                        <button className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
                                           <Trash2 className="w-4 h-4" />
                                         </button>
                                     </form>
