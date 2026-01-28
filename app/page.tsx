@@ -6,6 +6,7 @@ import HistoryChart from '@/components/HistoryChart';
 import SettingsModal from '@/components/SettingsModal';
 import SubscriptionCard from '@/components/SubscriptionCard';
 import TransactionForm from '@/components/TransactionForm';
+import SearchFilter from '@/components/SearchFilter'; // 👈 IMPORT THE NEW COMPONENT
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
@@ -13,16 +14,34 @@ export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
-export default async function Home() {
+// 👇 ACCEPT SEARCH PARAMS PROP
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const { userId } = await auth();
   const user = await currentUser();
+
+  // 👇 EXTRACT SEARCH QUERY
+  const query = typeof searchParams.q === 'string' ? searchParams.q : '';
 
   let transactions: any[] = [];
   let subscriptions: any[] = [];
   let categories: any[] = [];
   
   if (userId) {
-    transactions = await prisma.expense.findMany({ where: { userId }, orderBy: { date: 'desc' } });
+    // 👇 UPDATED QUERY TO INCLUDE FILTER
+    transactions = await prisma.expense.findMany({ 
+      where: { 
+        userId,
+        description: {
+          contains: query,
+          mode: 'insensitive', // Case insensitive search
+        }
+      }, 
+      orderBy: { date: 'desc' } 
+    });
     subscriptions = await prisma.subscription.findMany({ where: { userId } });
     categories = await prisma.category.findMany({ where: { userId } });
   }
@@ -157,11 +176,11 @@ export default async function Home() {
                </div>
             </div>
 
-            {/* BOTTOM ROW: ACTIONS & LIST (Modified for better fill) */}
+            {/* BOTTOM ROW: ACTIONS & LIST */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 {/* LEFT COLUMN: Sticky Tools */}
-                {/* FIX APPLIED HERE: Added 'lg:' prefix to sticky and top-6 */}
+                {/* 🛠️ FIX APPLIED: lg:sticky so it doesn't block mobile scrolling */}
                 <div className="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
                     {/* 1. Transaction Form */}
                     <TransactionForm categories={categories} addAction={addTransaction} />
@@ -210,19 +229,30 @@ export default async function Home() {
 
                 {/* RIGHT COLUMN: Activity List */}
                 <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[500px] flex flex-col">
-                    <div className="flex items-center justify-between mb-6 px-2">
-                      <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-3 py-1 rounded-full">
-                        {transactions.length} Transactions
-                      </span>
+                    
+                    {/* 🔎 NEW: Header with Search Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-2">
+                      <div className="flex items-center gap-4">
+                          <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-3 py-1 rounded-full">
+                            {transactions.length}
+                          </span>
+                      </div>
+                      <SearchFilter />
                     </div>
                     
                     <div className="space-y-3 flex-1">
                         {transactions.length === 0 && (
                           <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">💤</div>
-                              <p className="text-gray-400 font-medium">No transactions yet.</p>
-                              <p className="text-gray-300 text-sm">Add one on the left to get started.</p>
+                              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">
+                                  {query ? '🔍' : '💤'}
+                              </div>
+                              <p className="text-gray-400 font-medium">
+                                  {query ? `No results for "${query}"` : 'No transactions yet.'}
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                  {query ? 'Try a different search term.' : 'Add one on the left to get started.'}
+                              </p>
                           </div>
                         )}
                         {transactions.map((t) => (
