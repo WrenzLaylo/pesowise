@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { addTransaction, deleteExpense, addSubscription, deleteSubscription, addCategory, deleteCategory, generateDemoData } from './actions';
-import { Trash2, TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react'; // Added icons
+import { Trash2, TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react'; 
 import ExpenseChart from '@/components/ExpenseChart';
 import HistoryChart from '@/components/HistoryChart';
 import SettingsModal from '@/components/SettingsModal';
@@ -9,7 +9,6 @@ import TransactionForm from '@/components/TransactionForm';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
-// 👇 ADD THIS LINE HERE
 export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
@@ -162,11 +161,12 @@ export default async function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 {/* LEFT COLUMN: Sticky Tools */}
-                <div className="lg:col-span-1 sticky top-6 space-y-6">
+                {/* FIX APPLIED HERE: Added 'lg:' prefix to sticky and top-6 */}
+                <div className="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
                     {/* 1. Transaction Form */}
                     <TransactionForm categories={categories} addAction={addTransaction} />
 
-                    {/* 2. NEW: Budget Overview Widget */}
+                    {/* 2. Budget Overview Widget */}
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -189,7 +189,7 @@ export default async function Home() {
                         </p>
                     </div>
 
-                    {/* 3. NEW: Financial Health Widget */}
+                    {/* 3. Financial Health Widget */}
                     <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-6 rounded-[2rem] shadow-lg text-white relative overflow-hidden">
                          <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-2 opacity-90">
