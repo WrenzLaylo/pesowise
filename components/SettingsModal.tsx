@@ -3,14 +3,25 @@
 import { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 
+// ✅ UPDATE THIS INTERFACE
 type SettingsProps = {
   categories: { id: number; name: string; icon: string }[];
   addCategoryAction: (formData: FormData) => void;
   deleteCategoryAction: (id: number) => void;
+  generateDemoDataAction: () => Promise<void>; // <--- Added this line
 };
 
-export default function SettingsModal({ categories, addCategoryAction, deleteCategoryAction }: SettingsProps) {
+// ✅ ADD IT TO THE PROPS HERE
+export default function SettingsModal({ 
+  categories, 
+  addCategoryAction, 
+  deleteCategoryAction, 
+  generateDemoDataAction 
+}: SettingsProps) {
+  
   const [isOpen, setIsOpen] = useState(false);
+
+  // ... rest of your component code ...
 
   if (!isOpen) {
     return (

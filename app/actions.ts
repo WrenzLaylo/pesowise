@@ -120,3 +120,72 @@ export async function deleteCategory(id: number) {
 
   revalidatePath('/');
 }
+
+// ... (keep all your existing imports and other functions)
+
+// ADD THIS AT THE BOTTOM OF THE FILE
+export async function generateDemoData() {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
+
+  // 1. Clear existing data
+  await prisma.expense.deleteMany({ where: { userId } });
+  await prisma.subscription.deleteMany({ where: { userId } });
+  await prisma.category.deleteMany({ where: { userId } });
+  await prisma.budget.deleteMany({ where: { userId } });
+
+  // 2. Set Budget
+  await prisma.budget.create({
+    data: { amount: 25000, userId }
+  });
+
+  // 3. Create Categories
+  const cats = ['Gym 🏋️', 'Date 🍷', 'Gaming 🎮', 'Coffee ☕'];
+  for (const cat of cats) {
+    await prisma.category.create({
+      data: { name: cat.split(' ')[0], icon: cat.split(' ')[1], userId }
+    });
+  }
+
+  // 4. Create Subscriptions
+  await prisma.subscription.createMany({
+    data: [
+      { name: 'Netflix', amount: 549, dueDay: 15, userId },
+      { name: 'Spotify', amount: 129, dueDay: 2, userId },
+    ]
+  });
+
+  // 5. Generate Random Transactions
+  const transactions = [];
+  const categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment'];
+  
+  // Add Salary
+  transactions.push({
+    amount: 30000,
+    category: 'Salary',
+    description: 'Monthly Pay',
+    type: 'INCOME',
+    date: new Date(),
+    userId
+  });
+
+  // Add Expenses
+  for (let i = 0; i < 40; i++) {
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    
+    transactions.push({
+      amount: Math.floor(Math.random() * 1500) + 50,
+      category: categories[Math.floor(Math.random() * categories.length)],
+      description: 'Random Expense',
+      type: 'EXPENSE',
+      date: date,
+      userId
+    });
+  }
+
+  await prisma.expense.createMany({ data: transactions });
+
+  revalidatePath('/');
+}
