@@ -7,8 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// Update the existing Expense model
 model Expense {
   id          Int      @id @default(autoincrement())
   amount      Float
@@ -25,12 +23,11 @@ model Subscription {
   id        Int      @id @default(autoincrement())
   name      String
   amount    Float
-  dueDay    Int      // e.g., 15 for the 15th of every month
+  dueDay    Int      
   userId    String
   createdAt DateTime @default(now())
 }
 
-// ... Keep Budget and Category models exactly as they were ...
 model Budget {
   id     Int   @id @default(autoincrement())
   amount Float @default(0)

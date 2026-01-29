@@ -1,12 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { addTransaction, deleteExpense, addSubscription, deleteSubscription, addCategory, deleteCategory, generateDemoData } from './actions';
-import { Trash2, TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react'; 
-import ExpenseChart from '@/components/ExpenseChart';
-import HistoryChart from '@/components/HistoryChart';
+import { Trash2, TrendingUp, TrendingDown, Wallet, Target, ArrowRight, Calendar, PiggyBank } from 'lucide-react'; 
 import SettingsModal from '@/components/SettingsModal';
 import SubscriptionCard from '@/components/SubscriptionCard';
 import TransactionForm from '@/components/TransactionForm';
-import SearchFilter from '@/components/SearchFilter'; // 👈 IMPORT THE NEW COMPONENT
+import SearchFilter from '@/components/SearchFilter';
+import ChartSection from '@/components/ChartSection'; // Import the new component
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
@@ -14,7 +13,6 @@ export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
-// 👇 ACCEPT SEARCH PARAMS PROP
 export default async function Home({
   searchParams,
 }: {
@@ -22,8 +20,6 @@ export default async function Home({
 }) {
   const { userId } = await auth();
   const user = await currentUser();
-
-  // 👇 EXTRACT SEARCH QUERY
   const query = typeof searchParams.q === 'string' ? searchParams.q : '';
 
   let transactions: any[] = [];
@@ -31,14 +27,10 @@ export default async function Home({
   let categories: any[] = [];
   
   if (userId) {
-    // 👇 UPDATED QUERY TO INCLUDE FILTER
     transactions = await prisma.expense.findMany({ 
       where: { 
         userId,
-        description: {
-          contains: query,
-          mode: 'insensitive', // Case insensitive search
-        }
+        description: { contains: query, mode: 'insensitive' }
       }, 
       orderBy: { date: 'desc' } 
     });
@@ -46,18 +38,20 @@ export default async function Home({
     categories = await prisma.category.findMany({ where: { userId } });
   }
 
-  // --- Calculations ---
   const incomeItems = transactions.filter(t => t.type === 'INCOME');
   const expenseItems = transactions.filter(t => t.type === 'EXPENSE' || !t.type);
   const totalIncome = incomeItems.reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = expenseItems.reduce((sum, t) => sum + t.amount, 0);
   const totalBalance = totalIncome - totalExpenses;
 
-  // Budget Calculations
+  const currentDate = new Date();
+  const daysPassed = currentDate.getDate() || 1; 
+  const dailyAverage = totalExpenses > 0 ? totalExpenses / daysPassed : 0;
+  const projectedSavings = totalIncome - totalExpenses;
+
   const spentPercentage = totalIncome > 0 ? Math.min((totalExpenses / totalIncome) * 100, 100) : 0;
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
 
-  // Chart Data
   const chartDataMap = new Map<string, number>();
   expenseItems.forEach((item) => {
     const current = chartDataMap.get(item.category) || 0;
@@ -78,216 +72,228 @@ export default async function Home({
   });
   const barData = Array.from(historyMap, ([date, amount]) => ({ date, amount }));
 
+  const getCategoryIcon = (categoryName: string, type: string) => {
+    if (type === 'INCOME') return '💰';
+    const customCat = categories.find((c: any) => c.name === categoryName);
+    if (customCat?.icon) return customCat.icon;
+
+    switch (categoryName) {
+      case 'Food': return '🍔';
+      case 'Transport': return '🚕';
+      case 'Bills': return '💡';
+      case 'Shopping': return '🛍️';
+      case 'Entertainment': return '🎬';
+      default: return '💸';
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[#F2F2F7] font-sans text-slate-900">
+    <main className="min-h-screen bg-[#F2F2F7] font-sans text-slate-900 selection:bg-emerald-100">
       
       <SignedOut>
-         <div className="flex min-h-screen items-center justify-center p-6">
-            <div className="text-center space-y-6 p-10 bg-white rounded-[3rem] shadow-2xl max-w-md w-full border border-gray-100">
-                <h1 className="text-4xl font-black tracking-tight">PesoWise</h1>
-                <p className="text-gray-500">Sign in to manage your budget.</p>
-                <SignInButton mode="modal">
-                   <button className="bg-slate-900 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-transform">
-                      Sign In
-                   </button>
-                </SignInButton>
+         <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-slate-950 text-white selection:bg-emerald-500/30">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black"></div>
+            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse"></div>
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
+
+            <div className="relative z-10 w-full max-w-md p-8 mx-4">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl text-center space-y-8">
+                    <div className="space-y-2">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 mb-4 shadow-lg shadow-emerald-500/20">
+                            <Wallet className="w-8 h-8 text-white" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+                            PesoWise
+                        </h1>
+                        <p className="text-slate-400 text-lg font-medium">Master your money.</p>
+                    </div>
+                    <SignInButton mode="modal">
+                       <button className="group relative w-full bg-white text-slate-950 font-bold py-4 px-8 rounded-2xl hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-white/5">
+                          <span>Get Started</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                       </button>
+                    </SignInButton>
+                </div>
             </div>
          </div>
       </SignedOut>
 
       <SignedIn>
-        <div className="w-full p-4 md:p-6 lg:p-8">
+        <div className="w-full p-3 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-              <div className="flex items-center gap-4">
-                 <div className="scale-110"><UserButton afterSignOutUrl="/" /></div>
-                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-black">
-                      Hi, {user?.firstName || 'Friend'}!
-                    </h1>
-                    <p className="text-gray-500 text-sm font-medium">Welcome to your financial command center.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2 pb-2">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/20">
+                    <Wallet className="w-6 h-6 text-emerald-400" />
                  </div>
+                 <span className="text-2xl font-black tracking-tight text-slate-900">
+                    PesoWise
+                 </span>
               </div>
-              
-              <SettingsModal 
-                 categories={categories} 
-                 addCategoryAction={addCategory} 
-                 deleteCategoryAction={deleteCategory} 
-                 generateDemoDataAction={generateDemoData}
-              />
+              <div className="flex items-center justify-between md:justify-end gap-3 md:gap-6 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
+                 <div className="flex items-center gap-3 pl-2">
+                    <div className="text-right hidden sm:block">
+                       <p className="text-sm font-bold text-slate-900 leading-none">{user?.firstName || 'Friend'}</p>
+                       <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mt-1">Pro Member</p>
+                    </div>
+                    <UserButton afterSignOutUrl="/" />
+                 </div>
+                 <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+                 <SettingsModal 
+                    categories={categories} 
+                    addCategoryAction={addCategory} 
+                    deleteCategoryAction={deleteCategory} 
+                    generateDemoDataAction={generateDemoData}
+                 />
+              </div>
             </div>
 
-            {/* TOP ROW: BALANCE & SUBSCRIPTIONS */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               
-               {/* BALANCE CARD (Takes 2 columns) */}
-               <div className="lg:col-span-2 bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-900/10 relative overflow-hidden flex flex-col justify-center min-h-[300px] border border-transparent">
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 w-full">
+            {/* ROW 1: NET BALANCE (Full Width) */}
+            <div className="w-full">
+               <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-900/10 relative overflow-hidden border border-transparent">
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
                       <div className="space-y-2">
                           <p className="text-gray-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                             Total Net Balance
                           </p>
-                          <h2 className="text-5xl md:text-7xl font-black tracking-tight">₱{totalBalance.toLocaleString()}</h2>
-                          <p className="text-sm text-gray-500 font-medium pt-2 flex items-center gap-2">
-                            {totalBalance > 0 ? <TrendingUp className="w-4 h-4 text-emerald-500"/> : <TrendingDown className="w-4 h-4 text-red-500"/>}
-                            {totalBalance > 0 ? "You are saving money! 🎉" : "Time to tighten the budget. 😬"}
-                          </p>
+                          <div className="flex items-baseline gap-4 flex-wrap">
+                             <h2 className="text-5xl md:text-7xl font-black tracking-tight">₱{totalBalance.toLocaleString()}</h2>
+                             <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${totalBalance >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                {totalBalance >= 0 ? <TrendingUp className="w-3 h-3"/> : <TrendingDown className="w-3 h-3"/>}
+                                {totalBalance >= 0 ? '+ Saving' : '- Deficit'}
+                             </div>
+                          </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-                          <div className="text-left sm:text-right">
-                              <div className="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center sm:justify-end gap-1">
-                                Income <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                              </div>
-                              <div className="text-2xl font-bold">₱{totalIncome.toLocaleString()}</div>
+                      {/* Stats Grid inside Header */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
+                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Income</div>
+                              <div className="text-lg font-bold">₱{totalIncome.toLocaleString()}</div>
                           </div>
-                          <div className="hidden sm:block w-px h-12 bg-gray-700/50"></div>
-                          <div className="text-left">
-                              <div className="text-xs text-red-400 font-bold uppercase mb-1 flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full bg-red-400" /> Expenses
-                              </div>
-                              <div className="text-2xl font-bold">₱{totalExpenses.toLocaleString()}</div>
+                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Expenses</div>
+                              <div className="text-lg font-bold">₱{totalExpenses.toLocaleString()}</div>
+                          </div>
+                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Daily Avg</div>
+                              <div className="text-lg font-bold">₱{Math.round(dailyAverage).toLocaleString()}</div>
+                          </div>
+                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Saved</div>
+                              <div className="text-lg font-bold">₱{projectedSavings > 0 ? projectedSavings.toLocaleString() : '0'}</div>
                           </div>
                       </div>
                   </div>
-                  <div className="absolute -right-10 -bottom-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-               </div>
-
-               {/* SUBSCRIPTIONS (Takes 1 column) */}
-               <div className="lg:col-span-1 h-full flex flex-col">
-                  <SubscriptionCard 
-                    subscriptions={subscriptions} 
-                    addSubAction={addSubscription} 
-                    deleteSubAction={deleteSubscription} 
-                  />
+                  <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
+                  <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
                </div>
             </div>
 
-            {/* MIDDLE ROW: CHARTS */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               <div className="lg:col-span-2 h-full">
-                  <HistoryChart data={barData} />
+            {/* ROW 2: CHARTS & COMPACT STATS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
+               
+               {/* Toggleable Chart Section (Takes up 2/3) */}
+               <div className="lg:col-span-2">
+                  <ChartSection barData={barData} pieData={pieData} />
                </div>
-               <div className="lg:col-span-1 h-full">
-                  <ExpenseChart data={pieData} />
-               </div>
-            </div>
-
-            {/* BOTTOM ROW: ACTIONS & LIST */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                
-                {/* LEFT COLUMN: Sticky Tools */}
-                {/* 🛠️ FIX APPLIED: lg:sticky so it doesn't block mobile scrolling */}
-                <div className="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
-                    {/* 1. Transaction Form */}
-                    <TransactionForm categories={categories} addAction={addTransaction} />
-
-                    {/* 2. Budget Overview Widget */}
-                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                                <Wallet className="w-5 h-5 text-purple-500" />
-                                Monthly Budget
-                            </h3>
-                            <span className="text-xs font-bold bg-purple-50 text-purple-600 px-2 py-1 rounded-full">
-                                {Math.round(spentPercentage)}% Used
-                            </span>
-                        </div>
-                        
-                        <div className="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full transition-all duration-500 ${spentPercentage > 90 ? 'bg-red-500' : 'bg-purple-500'}`} 
-                                style={{ width: `${spentPercentage}%` }}
-                            ></div>
-                        </div>
-                        <p className="text-xs text-gray-500 text-center">
-                            You have spent <b>₱{totalExpenses.toLocaleString()}</b> of your <b>₱{totalIncome.toLocaleString()}</b> income.
-                        </p>
-                    </div>
-
-                    {/* 3. Financial Health Widget */}
-                    <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-6 rounded-[2rem] shadow-lg text-white relative overflow-hidden">
-                         <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-2 opacity-90">
-                                <Target className="w-5 h-5" />
-                                <span className="text-sm font-bold uppercase tracking-wider">Savings Rate</span>
+               
+               {/* Compact Budget & Savings (Takes up 1/3) */}
+               <div className="lg:col-span-1 flex flex-col gap-4">
+                  {/* Monthly Budget Compact */}
+                  <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex-1 flex flex-col justify-center">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-purple-50 rounded-xl">
+                                    <Wallet className="w-5 h-5 text-purple-600" />
+                                </div>
+                                <span className="font-bold text-slate-900">Budget Used</span>
                             </div>
-                            <div className="text-4xl font-black mb-1">
-                                {Math.round(savingsRate)}%
+                            <span className="text-2xl font-black text-slate-900">{Math.round(spentPercentage)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-500 ${spentPercentage > 90 ? 'bg-red-500' : 'bg-purple-500'}`} style={{ width: `${spentPercentage}%` }}></div>
+                        </div>
+                        <p className="text-xs text-gray-400">₱{totalExpenses.toLocaleString()} spent</p>
+                  </div>
+
+                  {/* Savings Rate Compact */}
+                  <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-6 rounded-[2rem] shadow-lg text-white flex-1 flex flex-col justify-center relative overflow-hidden">
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                                    <Target className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="font-bold opacity-90">Savings Rate</span>
                             </div>
-                            <p className="text-sm opacity-90 font-medium">
-                                {savingsRate > 20 ? "Excellent work! 🚀" : savingsRate > 0 ? "Good start, keep going!" : "Let's try to save more."}
+                            <span className="text-2xl font-black">{Math.round(savingsRate)}%</span>
+                        </div>
+                        <div className="relative z-10 mt-2">
+                            <p className="text-xs opacity-80 font-medium">
+                                {savingsRate > 20 ? "Excellent work! 🚀" : "Keep pushing! 💪"}
                             </p>
-                         </div>
-                         <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                    </div>
+                        </div>
+                        {/* Blob */}
+                        <div className="absolute -right-5 -bottom-5 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                  </div>
+               </div>
+            </div>
 
+            {/* ROW 3: ACTIONS & LISTS (3 Columns) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
+                
+                {/* 1. Add Transaction */}
+                <div className="lg:col-span-1 h-full">
+                    <TransactionForm categories={categories} addAction={addTransaction} />
                 </div>
 
-                {/* RIGHT COLUMN: Activity List */}
-                <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[500px] flex flex-col">
-                    
-                    {/* 🔎 NEW: Header with Search Bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-2">
-                      <div className="flex items-center gap-4">
-                          <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-3 py-1 rounded-full">
-                            {transactions.length}
-                          </span>
-                      </div>
+                {/* 2. Subscriptions */}
+                <div className="lg:col-span-1 h-full">
+                     <SubscriptionCard subscriptions={subscriptions} addSubAction={addSubscription} deleteSubAction={deleteSubscription} />
+                </div>
+
+                {/* 3. Recent Activity */}
+                <div className="lg:col-span-1 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[400px] flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-bold text-slate-900">Activity</h3>
                       <SearchFilter />
                     </div>
                     
-                    <div className="space-y-3 flex-1">
+                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
                         {transactions.length === 0 && (
-                          <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">
-                                  {query ? '🔍' : '💤'}
-                              </div>
-                              <p className="text-gray-400 font-medium">
-                                  {query ? `No results for "${query}"` : 'No transactions yet.'}
-                              </p>
-                              <p className="text-gray-300 text-sm">
-                                  {query ? 'Try a different search term.' : 'Add one on the left to get started.'}
-                              </p>
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                              <p className="text-gray-400 text-sm">No transactions yet.</p>
                           </div>
                         )}
                         {transactions.map((t) => (
-                            <div key={t.id} className="group bg-gray-50/50 hover:bg-white rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-gray-100 hover:shadow-md transition-all duration-200">
-                                <div className="flex items-center gap-4">
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${t.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-700 border border-gray-100'}`}>
-                                        {t.type === 'INCOME' ? '💰' : t.category === 'Food' ? '🍔' : t.category === 'Transport' ? '🚕' : '💸'}
+                            <div key={t.id} className="group flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-lg ${t.type === 'INCOME' ? 'bg-emerald-100' : 'bg-gray-50 border border-gray-100'}`}>
+                                        {getCategoryIcon(t.category, t.type)}
                                     </div>
-                                    <div>
-                                        <div className="font-bold text-slate-900 text-base">{t.description}</div>
-                                        <div className="text-xs text-gray-500 font-medium mt-0.5">
-                                           {new Date(t.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} • {t.type === 'INCOME' ? <span className="text-emerald-600 font-bold">Income</span> : t.category}
+                                    <div className="min-w-0">
+                                        <div className="font-bold text-slate-900 text-sm truncate max-w-[100px]">{t.description}</div>
+                                        <div className="text-[10px] text-gray-500 font-medium">
+                                           {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-5">
-                                    <span className={`font-bold text-lg ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                       {t.type === 'INCOME' ? '+' : '-'}₱{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                <div className="text-right shrink-0">
+                                    <span className={`block font-bold text-sm ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                       {t.type === 'INCOME' ? '+' : '-'}₱{t.amount.toLocaleString()}
                                     </span>
-                                    <form action={deleteExpense.bind(null, t.id)}>
-                                        <button className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
-                                          <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    <form action={deleteExpense.bind(null, t.id)} className="inline-block">
+                                        <button className="text-[10px] text-red-400 hover:text-red-600 hover:underline">Delete</button>
                                     </form>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    {/* Footer text to fill bottom space nicely */}
-                    {transactions.length > 5 && (
-                        <div className="pt-6 text-center border-t border-gray-50 mt-4">
-                            <p className="text-xs text-gray-400">Showing recent transactions</p>
-                        </div>
-                    )}
                 </div>
+
             </div>
 
           </div>
