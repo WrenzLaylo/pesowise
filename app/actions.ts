@@ -15,7 +15,9 @@ const prisma = new PrismaClient();
  */
 export async function addTransaction(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     const amount = parseFloat(formData.get('amount') as string);
@@ -25,16 +27,19 @@ export async function addTransaction(formData: FormData) {
 
     // Validation
     if (!amount || amount <= 0) {
-      throw new Error("Amount must be a positive number");
+      return { success: false, error: 'Amount must be a positive number' };
     }
     if (!description || description.trim().length === 0) {
-      throw new Error("Description is required");
+      return { success: false, error: 'Description is required' };
     }
     if (!category || category.trim().length === 0) {
-      throw new Error("Category is required");
+      return { success: false, error: 'Category is required' };
+    }
+    if (description.trim().length > 100) {
+      return { success: false, error: 'Description is too long (max 100 characters)' };
     }
 
-    await prisma.expense.create({
+    const transaction = await prisma.expense.create({
       data: {
         amount,
         description: description.trim(),
@@ -45,9 +50,17 @@ export async function addTransaction(formData: FormData) {
     });
 
     revalidatePath('/');
+    return { 
+      success: true, 
+      message: `${type === 'INCOME' ? 'Income' : 'Expense'} added successfully!`,
+      data: transaction
+    };
   } catch (error) {
     console.error('Error adding transaction:', error);
-    throw error;
+    return { 
+      success: false, 
+      error: 'Failed to add transaction. Please try again.' 
+    };
   }
 }
 
@@ -56,21 +69,28 @@ export async function addTransaction(formData: FormData) {
  */
 export async function deleteExpense(id: number) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     // Only delete if the expense belongs to the current user (security check)
-    await prisma.expense.deleteMany({
+    const deleted = await prisma.expense.deleteMany({
       where: {
         id,
         userId,
       },
     });
 
+    if (deleted.count === 0) {
+      return { success: false, error: 'Transaction not found or already deleted' };
+    }
+
     revalidatePath('/');
+    return { success: true, message: 'Transaction deleted successfully!' };
   } catch (error) {
     console.error('Error deleting transaction:', error);
-    throw error;
+    return { success: false, error: 'Failed to delete transaction. Please try again.' };
   }
 }
 
@@ -83,7 +103,9 @@ export async function deleteExpense(id: number) {
  */
 export async function addSubscription(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     const name = formData.get('name') as string;
@@ -92,16 +114,19 @@ export async function addSubscription(formData: FormData) {
 
     // Validation
     if (!name || name.trim().length === 0) {
-      throw new Error("Subscription name is required");
+      return { success: false, error: 'Subscription name is required' };
+    }
+    if (name.trim().length > 50) {
+      return { success: false, error: 'Name is too long (max 50 characters)' };
     }
     if (!amount || amount <= 0) {
-      throw new Error("Amount must be a positive number");
+      return { success: false, error: 'Amount must be a positive number' };
     }
     if (!dueDay || dueDay < 1 || dueDay > 31) {
-      throw new Error("Due day must be between 1 and 31");
+      return { success: false, error: 'Due day must be between 1 and 31' };
     }
 
-    await prisma.subscription.create({
+    const subscription = await prisma.subscription.create({
       data: {
         name: name.trim(),
         amount,
@@ -111,9 +136,14 @@ export async function addSubscription(formData: FormData) {
     });
 
     revalidatePath('/');
+    return { 
+      success: true, 
+      message: 'Subscription added successfully!',
+      data: subscription
+    };
   } catch (error) {
     console.error('Error adding subscription:', error);
-    throw error;
+    return { success: false, error: 'Failed to add subscription. Please try again.' };
   }
 }
 
@@ -122,17 +152,24 @@ export async function addSubscription(formData: FormData) {
  */
 export async function deleteSubscription(id: number) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
-    await prisma.subscription.deleteMany({
+    const deleted = await prisma.subscription.deleteMany({
       where: { id, userId },
     });
 
+    if (deleted.count === 0) {
+      return { success: false, error: 'Subscription not found or already deleted' };
+    }
+
     revalidatePath('/');
+    return { success: true, message: 'Subscription deleted successfully!' };
   } catch (error) {
     console.error('Error deleting subscription:', error);
-    throw error;
+    return { success: false, error: 'Failed to delete subscription. Please try again.' };
   }
 }
 
@@ -145,7 +182,9 @@ export async function deleteSubscription(id: number) {
  */
 export async function addCategory(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     const name = formData.get('name') as string;
@@ -153,7 +192,10 @@ export async function addCategory(formData: FormData) {
 
     // Validation
     if (!name || name.trim().length === 0) {
-      throw new Error("Category name is required");
+      return { success: false, error: 'Category name is required' };
+    }
+    if (name.trim().length > 30) {
+      return { success: false, error: 'Name is too long (max 30 characters)' };
     }
 
     // Check if category already exists for this user
@@ -165,10 +207,10 @@ export async function addCategory(formData: FormData) {
     });
 
     if (existing) {
-      throw new Error("Category already exists");
+      return { success: false, error: 'Category already exists' };
     }
 
-    await prisma.category.create({
+    const category = await prisma.category.create({
       data: {
         name: name.trim(),
         icon,
@@ -177,9 +219,14 @@ export async function addCategory(formData: FormData) {
     });
 
     revalidatePath('/');
+    return { 
+      success: true, 
+      message: 'Category added successfully!',
+      data: category
+    };
   } catch (error) {
     console.error('Error adding category:', error);
-    throw error;
+    return { success: false, error: 'Failed to add category. Please try again.' };
   }
 }
 
@@ -188,17 +235,41 @@ export async function addCategory(formData: FormData) {
  */
 export async function deleteCategory(id: number) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
-    await prisma.category.deleteMany({
+    // Check if category is being used in transactions
+    const transactionsUsingCategory = await prisma.expense.findFirst({
+      where: {
+        userId,
+        category: {
+          equals: (await prisma.category.findUnique({ where: { id } }))?.name
+        }
+      }
+    });
+
+    if (transactionsUsingCategory) {
+      return { 
+        success: false, 
+        error: 'Cannot delete category that is being used in transactions' 
+      };
+    }
+
+    const deleted = await prisma.category.deleteMany({
       where: { id, userId },
     });
 
+    if (deleted.count === 0) {
+      return { success: false, error: 'Category not found or already deleted' };
+    }
+
     revalidatePath('/');
+    return { success: true, message: 'Category deleted successfully!' };
   } catch (error) {
     console.error('Error deleting category:', error);
-    throw error;
+    return { success: false, error: 'Failed to delete category. Please try again.' };
   }
 }
 
@@ -211,14 +282,19 @@ export async function deleteCategory(id: number) {
  */
 export async function setBudget(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     const amount = parseFloat(formData.get('amount') as string);
 
     // Validation
     if (!amount || amount <= 0) {
-      throw new Error("Budget amount must be a positive number");
+      return { success: false, error: 'Budget amount must be a positive number' };
+    }
+    if (amount > 10000000) {
+      return { success: false, error: 'Budget amount is too large' };
     }
 
     // Find existing budget for this user
@@ -238,9 +314,10 @@ export async function setBudget(formData: FormData) {
     }
 
     revalidatePath('/');
+    return { success: true, message: 'Budget updated successfully!' };
   } catch (error) {
     console.error('Error setting budget:', error);
-    throw error;
+    return { success: false, error: 'Failed to set budget. Please try again.' };
   }
 }
 
@@ -254,7 +331,9 @@ export async function setBudget(formData: FormData) {
  */
 export async function generateDemoData() {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+  if (!userId) {
+    return { success: false, error: 'Unauthorized. Please sign in.' };
+  }
 
   try {
     // 1. Clear existing data
@@ -366,8 +445,12 @@ export async function generateDemoData() {
     await prisma.expense.createMany({ data: transactions });
 
     revalidatePath('/');
+    return { 
+      success: true, 
+      message: '🎉 Demo data generated successfully! Your dashboard is now populated.' 
+    };
   } catch (error) {
     console.error('Error generating demo data:', error);
-    throw error;
+    return { success: false, error: 'Failed to generate demo data. Please try again.' };
   }
 }

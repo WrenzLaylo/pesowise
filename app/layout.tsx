@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "./Scrollbar.css";
 import { ClerkProvider } from '@clerk/nextjs';
+import ToastProvider from '@/components/ToastProvider';
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -125,7 +126,30 @@ export default function RootLayout({
       }}
     >
       <html lang="en" className={inter.variable}>
-        <body className={`${inter.className} antialiased bg-[#F2F2F7]`}>
+        <head>
+          {/* Dark mode initialization script - prevents flash */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function() {
+                  try {
+                    const theme = localStorage.getItem('theme');
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    if (theme === 'dark' || (!theme && prefersDark)) {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
+                  } catch (e) {
+                    console.error('Error initializing theme:', e);
+                  }
+                })();
+              `,
+            }}
+          />
+        </head>
+        <body className={`${inter.className} antialiased bg-[#F2F2F7] dark:bg-slate-950 transition-colors duration-300`}>
           {children}
         </body>
       </html>
