@@ -5,7 +5,7 @@ import SettingsModal from '@/components/SettingsModal';
 import SubscriptionCard from '@/components/SubscriptionCard';
 import TransactionForm from '@/components/TransactionForm';
 import SearchFilter from '@/components/SearchFilter';
-import ChartSection from '@/components/ChartSection'; // Import the new component
+import ChartSection from '@/components/ChartSection';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
@@ -119,11 +119,11 @@ export default async function Home({
       </SignedOut>
 
       <SignedIn>
-        <div className="w-full p-3 md:p-6 lg:p-8">
+        <div className="w-full p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2 pb-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
               <div className="flex items-center gap-3">
                  <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/20">
                     <Wallet className="w-6 h-6 text-emerald-400" />
@@ -132,11 +132,11 @@ export default async function Home({
                     PesoWise
                  </span>
               </div>
-              <div className="flex items-center justify-between md:justify-end gap-3 md:gap-6 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
-                 <div className="flex items-center gap-3 pl-2">
+              <div className="flex items-center justify-between md:justify-end gap-4">
+                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
                        <p className="text-sm font-bold text-slate-900 leading-none">{user?.firstName || 'Friend'}</p>
-                       <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mt-1">Pro Member</p>
+                       <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mt-0.5">Pro Member</p>
                     </div>
                     <UserButton afterSignOutUrl="/" />
                  </div>
@@ -152,141 +152,157 @@ export default async function Home({
 
             {/* ROW 1: NET BALANCE (Full Width) */}
             <div className="w-full">
-               <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-900/10 relative overflow-hidden border border-transparent">
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
-                      <div className="space-y-2">
+               <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-900/10 relative overflow-hidden">
+                  <div className="relative z-10 space-y-6">
+                      <div className="space-y-3">
                           <p className="text-gray-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             Total Net Balance
                           </p>
-                          <div className="flex items-baseline gap-4 flex-wrap">
-                             <h2 className="text-5xl md:text-7xl font-black tracking-tight">₱{totalBalance.toLocaleString()}</h2>
-                             <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${totalBalance >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                                {totalBalance >= 0 ? <TrendingUp className="w-3 h-3"/> : <TrendingDown className="w-3 h-3"/>}
-                                {totalBalance >= 0 ? '+ Saving' : '- Deficit'}
+                          <div className="flex items-baseline gap-3 flex-wrap">
+                             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight">₱{totalBalance.toLocaleString()}</h2>
+                             <div className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${totalBalance >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+                                {totalBalance >= 0 ? <TrendingUp className="w-3.5 h-3.5"/> : <TrendingDown className="w-3.5 h-3.5"/>}
+                                {totalBalance >= 0 ? 'Saving' : 'Deficit'}
                              </div>
                           </div>
                       </div>
 
-                      {/* Stats Grid inside Header */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
-                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Income</div>
-                              <div className="text-lg font-bold">₱{totalIncome.toLocaleString()}</div>
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                          <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-200">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Income</div>
+                              <div className="text-xl md:text-2xl font-black text-emerald-400">₱{totalIncome.toLocaleString()}</div>
                           </div>
-                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Expenses</div>
-                              <div className="text-lg font-bold">₱{totalExpenses.toLocaleString()}</div>
+                          <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-200">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Expenses</div>
+                              <div className="text-xl md:text-2xl font-black text-red-400">₱{totalExpenses.toLocaleString()}</div>
                           </div>
-                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Daily Avg</div>
-                              <div className="text-lg font-bold">₱{Math.round(dailyAverage).toLocaleString()}</div>
+                          <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-200">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Daily Avg</div>
+                              <div className="text-xl md:text-2xl font-black">₱{Math.round(dailyAverage).toLocaleString()}</div>
                           </div>
-                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                              <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Saved</div>
-                              <div className="text-lg font-bold">₱{projectedSavings > 0 ? projectedSavings.toLocaleString() : '0'}</div>
+                          <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-200">
+                              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Saved</div>
+                              <div className="text-xl md:text-2xl font-black text-blue-400">₱{projectedSavings > 0 ? projectedSavings.toLocaleString() : '0'}</div>
                           </div>
                       </div>
                   </div>
-                  <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
-                  <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
+                  
+                  {/* Background decorations */}
+                  <div className="absolute -right-20 -top-20 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
                </div>
             </div>
 
-            {/* ROW 2: CHARTS & COMPACT STATS */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
+            {/* ROW 2: CHARTS & INSIGHTS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                
-               {/* Toggleable Chart Section (Takes up 2/3) */}
+               {/* Chart Section (2/3 width) */}
                <div className="lg:col-span-2">
                   <ChartSection barData={barData} pieData={pieData} />
                </div>
                
-               {/* Compact Budget & Savings (Takes up 1/3) */}
-               <div className="lg:col-span-1 flex flex-col gap-4">
-                  {/* Monthly Budget Compact */}
-                  <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex-1 flex flex-col justify-center">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
+               {/* Insights Column (1/3 width) */}
+               <div className="lg:col-span-1 flex flex-col gap-6">
+                  
+                  {/* Budget Card */}
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex-1">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2.5">
                                 <div className="p-2 bg-purple-50 rounded-xl">
                                     <Wallet className="w-5 h-5 text-purple-600" />
                                 </div>
                                 <span className="font-bold text-slate-900">Budget Used</span>
                             </div>
-                            <span className="text-2xl font-black text-slate-900">{Math.round(spentPercentage)}%</span>
+                            <span className="text-3xl font-black text-slate-900">{Math.round(spentPercentage)}%</span>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-500 ${spentPercentage > 90 ? 'bg-red-500' : 'bg-purple-500'}`} style={{ width: `${spentPercentage}%` }}></div>
+                        <div className="space-y-2">
+                            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${spentPercentage > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' : spentPercentage > 70 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`} 
+                                  style={{ width: `${spentPercentage}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-gray-500 font-medium">₱{totalExpenses.toLocaleString()} of ₱{totalIncome.toLocaleString()} spent</p>
                         </div>
-                        <p className="text-xs text-gray-400">₱{totalExpenses.toLocaleString()} spent</p>
                   </div>
 
-                  {/* Savings Rate Compact */}
-                  <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-6 rounded-[2rem] shadow-lg text-white flex-1 flex flex-col justify-center relative overflow-hidden">
-                        <div className="relative z-10 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <Target className="w-5 h-5 text-white" />
+                  {/* Savings Rate Card */}
+                  <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-3xl p-6 shadow-lg text-white flex-1 relative overflow-hidden">
+                        <div className="relative z-10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                                        <Target className="w-5 h-5 text-white" />
+                                    </div>
+                                    <span className="font-bold">Savings Rate</span>
                                 </div>
-                                <span className="font-bold opacity-90">Savings Rate</span>
+                                <span className="text-3xl font-black">{Math.round(savingsRate)}%</span>
                             </div>
-                            <span className="text-2xl font-black">{Math.round(savingsRate)}%</span>
-                        </div>
-                        <div className="relative z-10 mt-2">
-                            <p className="text-xs opacity-80 font-medium">
-                                {savingsRate > 20 ? "Excellent work! 🚀" : "Keep pushing! 💪"}
+                            <p className="text-sm font-medium opacity-90">
+                                {savingsRate > 30 ? "Outstanding! You're crushing it! 🚀" : savingsRate > 20 ? "Great work! Keep it up! 💪" : savingsRate > 10 ? "Good progress! 📈" : "Let's boost those savings! 💡"}
                             </p>
                         </div>
-                        {/* Blob */}
-                        <div className="absolute -right-5 -bottom-5 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                        
+                        {/* Decorative blobs */}
+                        <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                        <div className="absolute -left-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
                   </div>
+                  
                </div>
             </div>
 
-            {/* ROW 3: ACTIONS & LISTS (3 Columns) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
+            {/* ROW 3: ACTIONS & LISTS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* 1. Add Transaction */}
-                <div className="lg:col-span-1 h-full">
+                {/* Transaction Form */}
+                <div className="lg:col-span-1">
                     <TransactionForm categories={categories} addAction={addTransaction} />
                 </div>
 
-                {/* 2. Subscriptions */}
-                <div className="lg:col-span-1 h-full">
+                {/* Subscriptions */}
+                <div className="lg:col-span-1">
                      <SubscriptionCard subscriptions={subscriptions} addSubAction={addSubscription} deleteSubAction={deleteSubscription} />
                 </div>
 
-                {/* 3. Recent Activity */}
-                <div className="lg:col-span-1 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[400px] flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-bold text-slate-900">Activity</h3>
+                {/* Recent Activity */}
+                <div className="lg:col-span-1 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col h-[500px]">
+                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
+                      <h3 className="font-bold text-slate-900 text-lg">Recent Activity</h3>
                       <SearchFilter />
                     </div>
                     
-                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-custom">
                         {transactions.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-12 text-center">
-                              <p className="text-gray-400 text-sm">No transactions yet.</p>
+                          <div className="flex flex-col items-center justify-center h-full text-center">
+                              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+                                  <Wallet className="w-8 h-8 text-gray-400" />
+                              </div>
+                              <p className="text-gray-400 text-sm font-medium">No transactions yet</p>
+                              <p className="text-gray-400 text-xs mt-1">Add your first transaction to get started</p>
                           </div>
                         )}
                         {transactions.map((t) => (
-                            <div key={t.id} className="group flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-lg ${t.type === 'INCOME' ? 'bg-emerald-100' : 'bg-gray-50 border border-gray-100'}`}>
+                            <div key={t.id} className="group flex items-center justify-between p-3.5 rounded-2xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center text-xl font-medium shadow-sm ${t.type === 'INCOME' ? 'bg-emerald-50 border border-emerald-100' : 'bg-gray-50 border border-gray-200'}`}>
                                         {getCategoryIcon(t.category, t.type)}
                                     </div>
-                                    <div className="min-w-0">
-                                        <div className="font-bold text-slate-900 text-sm truncate max-w-[100px]">{t.description}</div>
-                                        <div className="text-[10px] text-gray-500 font-medium">
-                                           {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-bold text-slate-900 text-sm truncate">{t.description}</div>
+                                        <div className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
+                                           <Calendar className="w-3 h-3" />
+                                           {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right shrink-0">
-                                    <span className={`block font-bold text-sm ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                <div className="text-right shrink-0 ml-3">
+                                    <div className={`font-black text-base mb-1 ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-900'}`}>
                                        {t.type === 'INCOME' ? '+' : '-'}₱{t.amount.toLocaleString()}
-                                    </span>
+                                    </div>
                                     <form action={deleteExpense.bind(null, t.id)} className="inline-block">
-                                        <button className="text-[10px] text-red-400 hover:text-red-600 hover:underline">Delete</button>
+                                        <button className="text-[10px] text-gray-400 hover:text-red-600 font-medium uppercase tracking-wider transition-colors">Delete</button>
                                     </form>
                                 </div>
                             </div>
