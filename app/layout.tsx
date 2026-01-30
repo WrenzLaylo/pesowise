@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "./Scrollbar.css";
 import { ClerkProvider } from '@clerk/nextjs';
-import ToastProvider from '@/components/ToastProvider';
+import { ClientProviders } from '@/components/ClientProviders';
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -37,33 +37,23 @@ export default function RootLayout({
           socialButtonsVariant: 'iconButton',
         },
         variables: {
-          // Brand Colors
-          colorPrimary: '#0f172a',        // Slate-900 (main brand color)
-          colorText: '#0f172a',           // Slate-900 (text color)
-          colorSuccess: '#10b981',        // Emerald-500
-          colorDanger: '#ef4444',         // Red-500
-          
-          // Typography
+          colorPrimary: '#0f172a',
+          colorText: '#0f172a',
+          colorSuccess: '#10b981',
+          colorDanger: '#ef4444',
           fontFamily: inter.style.fontFamily,
-          fontSize: '0.875rem',           // 14px base
+          fontSize: '0.875rem',
           fontWeight: {
-            normal: '500',                // Medium weight
-            medium: '600',                // Semibold
-            bold: '700',                  // Bold
+            normal: '500',
+            medium: '600',
+            bold: '700',
           },
-          
-          // Border Radius
-          borderRadius: '1rem',           // 16px - matches rounded-2xl
+          borderRadius: '1rem',
         },
         elements: {
-          // Main Modal Card
           card: "shadow-2xl rounded-[2rem] border border-gray-100 overflow-hidden",
-          
-          // Header
           headerTitle: "font-black text-slate-900 text-2xl",
           headerSubtitle: "text-gray-500 font-medium text-sm",
-          
-          // Form Elements
           formButtonPrimary: `
             bg-gradient-to-r from-slate-900 to-slate-800
             hover:from-slate-800 hover:to-slate-700
@@ -87,8 +77,6 @@ export default function RootLayout({
             font-medium
           `,
           formFieldLabel: "text-xs font-bold text-gray-500 uppercase tracking-wider mb-2",
-          
-          // Social Buttons
           socialButtonsIconButton: `
             hover:bg-gray-50
             border border-gray-200
@@ -97,11 +85,7 @@ export default function RootLayout({
             hover:border-gray-300
             hover:shadow-sm
           `,
-          
-          // Links
           footerActionLink: "text-emerald-600 hover:text-emerald-700 font-bold transition-colors",
-          
-          // User Button Dropdown
           userButtonPopoverCard: "shadow-2xl rounded-2xl border border-gray-100 overflow-hidden",
           userButtonPopoverActions: "p-2",
           userButtonPopoverActionButton: `
@@ -112,14 +96,8 @@ export default function RootLayout({
             py-2.5
           `,
           userButtonPopoverActionButtonIcon: "text-gray-500",
-          
-          // Avatar
           avatarBox: "rounded-xl",
-          
-          // Badges
           badge: "bg-emerald-100 text-emerald-700 font-bold rounded-lg px-2 py-1",
-          
-          // Dividers
           dividerLine: "bg-gray-200",
           dividerText: "text-gray-400 text-xs font-medium",
         }
@@ -127,7 +105,6 @@ export default function RootLayout({
     >
       <html lang="en" className={inter.variable}>
         <head>
-          {/* Dark mode initialization script - prevents flash */}
           <script
             dangerouslySetInnerHTML={{
               __html: `
@@ -150,7 +127,9 @@ export default function RootLayout({
           />
         </head>
         <body className={`${inter.className} antialiased bg-[#F2F2F7] dark:bg-slate-950 transition-colors duration-300`}>
-          {children}
+          <ClientProviders>
+            {children}
+          </ClientProviders>
         </body>
       </html>
     </ClerkProvider>
