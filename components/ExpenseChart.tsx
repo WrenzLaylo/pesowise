@@ -34,7 +34,7 @@ export default function ExpenseChart({ data }: ChartProps) {
         return (
             <div className="h-full flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 mx-auto">
                         <PieChart className="w-10 h-10 text-gray-400" />
                     </div>
                     <p className="text-gray-400 text-sm font-medium">No spending data</p>
@@ -48,10 +48,10 @@ export default function ExpenseChart({ data }: ChartProps) {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 backdrop-blur-sm">
+                <div className="bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 dark:border-slate-600 backdrop-blur-sm">
                     <p className="font-bold text-sm mb-1">{data.category}</p>
                     <p className="text-2xl font-black mb-1">₱{data.amount.toLocaleString()}</p>
-                    <p className="text-xs text-gray-400">{data.percentage}% of total</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-300">{data.percentage}% of total</p>
                 </div>
             );
         }
@@ -92,8 +92,8 @@ export default function ExpenseChart({ data }: ChartProps) {
                 {/* Center Total */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total</p>
-                        <p className="text-2xl lg:text-3xl font-black text-slate-900">₱{total.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-1">Total</p>
+                        <p className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white">₱{total.toLocaleString()}</p>
                     </div>
                 </div>
             </div>
@@ -103,25 +103,25 @@ export default function ExpenseChart({ data }: ChartProps) {
                 {dataWithPercentage.map((entry, index) => (
                     <div 
                         key={entry.category} 
-                        className="group bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-all duration-200 border border-transparent hover:border-gray-200"
+                        className="group bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl p-3 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-slate-600"
                     >
                         <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <div 
-                                    className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white shadow-sm" 
+                                    className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white dark:ring-slate-700 shadow-sm" 
                                     style={{ backgroundColor: COLORS[data.findIndex(d => d.category === entry.category) % COLORS.length] }}
                                 />
-                                <span className="text-xs font-bold text-slate-900 truncate">{entry.category}</span>
+                                <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{entry.category}</span>
                             </div>
-                            <span className="text-xs font-black text-slate-900 shrink-0">{entry.percentage}%</span>
+                            <span className="text-xs font-black text-slate-900 dark:text-white shrink-0">{entry.percentage}%</span>
                         </div>
                         <div className="pl-5">
-                            <p className="text-sm font-black text-slate-900">₱{entry.amount.toLocaleString()}</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-white">₱{entry.amount.toLocaleString()}</p>
                         </div>
                         
                         {/* Progress Bar */}
                         <div className="mt-2 pl-5">
-                            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                                 <div 
                                     className="h-full rounded-full transition-all duration-500"
                                     style={{ 

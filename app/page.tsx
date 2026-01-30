@@ -32,12 +32,15 @@ export default async function Home({
   
   if (userId) {
     transactions = await prisma.expense.findMany({ 
-      where: { 
-        userId,
-        description: { contains: query, mode: 'insensitive' }
-      }, 
-      orderBy: { date: 'desc' } 
-    });
+  where: { 
+    userId,
+    OR: query ? [
+      { description: { contains: query, mode: 'insensitive' } },
+      { category: { contains: query, mode: 'insensitive' } }
+    ] : undefined
+  }, 
+  orderBy: { date: 'desc' } 
+});
     subscriptions = await prisma.subscription.findMany({ where: { userId } });
     categories = await prisma.category.findMany({ where: { userId } });
   }

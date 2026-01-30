@@ -31,8 +31,8 @@ export default function HistoryChart({ data }: ChartProps) {
       const isAboveAvg = data.value > average;
       
       return (
-        <div className="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700">
-          <p className="text-xs text-gray-400 font-medium mb-1">{data.payload.date}</p>
+        <div className="bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 dark:border-slate-600">
+          <p className="text-xs text-gray-400 dark:text-gray-300 font-medium mb-1">{data.payload.date}</p>
           <p className="text-2xl font-black mb-1">₱{data.value.toLocaleString()}</p>
           <div className="flex items-center gap-1.5 text-xs">
             {isAboveAvg ? (
@@ -58,7 +58,7 @@ export default function HistoryChart({ data }: ChartProps) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 mx-auto">
             <Calendar className="w-10 h-10 text-gray-400" />
           </div>
           <p className="text-gray-400 text-sm font-medium">No activity yet</p>
@@ -148,15 +148,15 @@ export default function HistoryChart({ data }: ChartProps) {
       {/* Average Line Indicator */}
       {average > 0 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-xs">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-200">
-            <div className="w-8 h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full"></div>
-            <span className="font-bold text-gray-600">Average: ₱{Math.round(average).toLocaleString()}/day</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-slate-800 rounded-full border border-gray-200 dark:border-slate-700">
+            <div className="w-8 h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-slate-600 dark:to-slate-500 rounded-full"></div>
+            <span className="font-bold text-gray-600 dark:text-gray-300">Average: ₱{Math.round(average).toLocaleString()}/day</span>
           </div>
         </div>
       )}
 
       {/* Color Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-3 mt-3 text-[10px] font-bold text-gray-600">
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-3 text-[10px] font-bold text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-gradient-to-b from-blue-500 to-blue-400"></div>
           <span>Normal</span>

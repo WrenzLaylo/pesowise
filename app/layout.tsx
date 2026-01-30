@@ -103,7 +103,7 @@ export default function RootLayout({
         }
       }}
     >
-      <html lang="en" className={inter.variable}>
+      <html lang="en" className={inter.variable} suppressHydrationWarning>
         <head>
           <script
             dangerouslySetInnerHTML={{
@@ -118,15 +118,13 @@ export default function RootLayout({
                     } else {
                       document.documentElement.classList.remove('dark');
                     }
-                  } catch (e) {
-                    console.error('Error initializing theme:', e);
-                  }
+                  } catch (e) {}
                 })();
               `,
             }}
           />
         </head>
-        <body className={`${inter.className} antialiased bg-[#F2F2F7] dark:bg-slate-950 transition-colors duration-300`}>
+        <body className={`${inter.className} antialiased bg-[#F2F2F7] dark:bg-slate-950 transition-colors duration-300 min-h-screen`}>
           <ClientProviders>
             {children}
           </ClientProviders>
